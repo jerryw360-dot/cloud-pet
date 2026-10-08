@@ -1,0 +1,45 @@
+{
+  "name": "cloud-pet",
+  "version": "1.0.1",
+  "description": "云桌宠 - 可爱的桌面宠物",
+  "main": "main.js",
+  "author": "CloudPet",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win --x64 --config.win.target=portable"
+  },
+  "devDependencies": {
+    "electron": "^31",
+    "electron-builder": "^24"
+  },
+  "build": {
+    "appId": "com.cloudpet.app",
+    "productName": "云桌宠",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "style.css",
+      "app.js"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "云桌宠"
+    }
+  }
+}

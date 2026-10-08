@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云桌宠 · 桌面版下载</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #333;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      max-width: 880px;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 28px;
+      padding: 48px 40px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+
+    /* 宠物预览区 */
+    .pet-stage {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pet-bubble {
+      position: absolute;
+      background: #fff;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      color: #667eea;
+      white-space: nowrap;
+      top: -8px;
+      right: -30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      animation: floatBubble 3s ease-in-out infinite;
+    }
+    .pet-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 20px;
+      border: 6px solid transparent;
+      border-top-color: #fff;
+    }
+
+    @keyframes floatBubble {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .pet-emoji {
+      font-size: 88px;
+      line-height: 1;
+      animation: petBounce 2.5s ease-in-out infinite;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+    }
+
+    @keyframes petBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-12px) scale(1.05); }
+    }
+
+    .pet-shadow {
+      position: absolute;
+      bottom: 4px;
+      width: 70px;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 50%;
+      animation: shadowPulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes shadowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(0.8); opacity: 0.1; }
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .version {
+      display: inline-block;
+      background: #f0f0ff;
+      color: #667eea;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* 功能亮点 */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .feature {
+      background: #f8f9ff;
+      border-radius: 16px;
+      padding: 20px 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    }
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 4px;
+    }
+    .feature-desc {
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* 下载按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      padding: 16px 48px;
+      border-radius: 32px;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 28px rgba(102, 126, 234, 0.45);
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(102, 126, 234, 0.55);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn-icon { font-size: 22px; }
+
+    .file-size {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    /* 安装步骤 */
+    .steps {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid #eee;
+      text-align: left;
+    }
+    .steps h2 {
+      font-size: 18px;
+      color: #444;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .step-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .step-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+      padding-top: 4px;
+    }
+    .step-text strong {
+      color: #444;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* 系统要求 */
+    .requirements {
+      margin-top: 28px;
+      padding: 16px 20px;
+      background: #f8f9ff;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #666;
+    }
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 页脚 */
+    .footer {
+      margin-top: 28px;
+      font-size: 12px;
+      color: #bbb;
+    }
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    .footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .card { padding: 32px 20px; }
+      h1 { font-size: 26px; }
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .btn { padding: 14px 32px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <!-- 宠物预览 -->
+      <div class="pet-stage">
+        <div class="pet-bubble">来陪我玩呀～</div>
+        <div class="pet-emoji">🐱</div>
+        <div class="pet-shadow"></div>
+      </div>
+
+      <h1>云桌宠</h1>
+      <span class="version">v1.0.1 · Windows</span>
+      <p class="subtitle">
+        一只可爱的桌面小精灵，透明无边框窗口，始终置顶陪伴你工作学习。<br>
+        右键宠物呼出菜单，支持抚摸、喂食、玩耍、睡觉、智能对话。
+      </p>
+
+      <!-- 功能亮点 -->
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🪟</div>
+          <div class="feature-title">透明窗口</div>
+          <div class="feature-desc">无边框无标题栏</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📌</div>
+          <div class="feature-title">始终置顶</div>
+          <div class="feature-desc">浮在所有窗口之上</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🖱️</div>
+          <div class="feature-title">自由拖拽</div>
+          <div class="feature-desc">拖到屏幕任意位置</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🐾</div>
+          <div class="feature-title">5 种宠物</div>
+          <div class="feature-desc">猫狗兔仓鼠熊猫</div>
+        </div>
+      </div>
+
+      <!-- 下载按钮 -->
+      <a href="dist/云桌宠 Setup 1.0.1.exe" download class="btn">
+        <span class="btn-icon">⬇️</span>
+        <span>下载 Windows 版</span>
+      </a>
+      <div class="file-size">安装包大小约 75 MB · 支持 Windows 10/11 (64 位)</div>
+
+      <!-- 安装步骤 -->
+      <div class="steps">
+        <h2>安装只需 3 步</h2>
+        <div class="step-list">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>下载安装包</strong>
+              点击上方按钮下载 .exe 安装程序
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>运行安装</strong>
+              双击安装包，按提示完成安装
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <strong>开始陪伴</strong>
+              桌面出现「云桌宠」快捷方式，双击启动
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 系统要求 -->
+      <div class="requirements">
+        <div class="req-item">🪟 Windows 10 及以上</div>
+        <div class="req-item">💻 64 位系统</div>
+        <div class="req-item">💾 200 MB 可用空间</div>
+      </div>
+
+      <div class="footer">
+        也想在浏览器里体验？<a href="index.html">试试 Web 版</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

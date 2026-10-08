@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>云桌宠 · Cloud Pet</title>
+  <meta name="description" content="一个可以在浏览器里陪伴你的可爱桌面宠物，支持云端部署。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 主舞台 -->
+  <main class="stage" id="stage">
+    <!-- 宠物容器 -->
+    <div class="pet" id="pet">
+      <!-- 对话气泡 -->
+      <div class="bubble" id="bubble"></div>
+      <!-- 宠物 SVG 插槽 -->
+      <div class="pet-body" id="petBody"></div>
+      <!-- 影子 -->
+      <div class="pet-shadow"></div>
+    </div>
+
+    <!-- 漂浮特效层 -->
+    <div class="fx-layer" id="fxLayer"></div>
+  </main>
+
+  <!-- 右键上下文菜单 -->
+  <div class="context-menu hidden" id="contextMenu">
+    <div class="ctx-header">
+      <span class="ctx-name" id="ctxName">小橘</span>
+      <div class="ctx-stats">
+        <div class="ctx-stat">
+          <span class="ctx-stat-label">心情</span>
+          <div class="ctx-bar"><div class="ctx-bar-fill mood" id="ctxMoodBar"></div></div>
+        </div>
+        <div class="ctx-stat">
+          <span class="ctx-stat-label">饱食</span>
+          <div class="ctx-bar"><div class="ctx-bar-fill hunger" id="ctxHungerBar"></div></div>
+        </div>
+        <div class="ctx-stat">
+          <span class="ctx-stat-label">精力</span>
+          <div class="ctx-bar"><div class="ctx-bar-fill energy" id="ctxEnergyBar"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="pet"><span class="ctx-icon">🤚</span><span>抚摸</span></div>
+    <div class="ctx-item" data-action="feed"><span class="ctx-icon">🍖</span><span>喂食</span></div>
+    <div class="ctx-item" data-action="play"><span class="ctx-icon">🎾</span><span>玩耍</span></div>
+    <div class="ctx-item" data-action="sleep"><span class="ctx-icon">💤</span><span>睡觉 / 叫醒</span></div>
+    <div class="ctx-item" data-action="talk"><span class="ctx-icon">💬</span><span>聊天</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="tasks"><span class="ctx-icon">📋</span><span>任务提醒</span></div>
+    <div class="ctx-item" data-action="pomodoro"><span class="ctx-icon">🍅</span><span>番茄钟</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="pip"><span class="ctx-icon">📌</span><span>置顶显示</span></div>
+    <div class="ctx-item" data-action="settings"><span class="ctx-icon">⚙️</span><span>设置</span></div>
+    <div class="ctx-item" data-action="help"><span class="ctx-icon">❓</span><span>帮助</span></div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" data-action="close-menu"><span class="ctx-icon">✖️</span><span>关闭菜单</span></div>
+    <div class="ctx-item" data-action="quit"><span class="ctx-icon">👋</span><span>退出</span></div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-card">
+      <h2>设置</h2>
+      <label class="field">
+        <span>宠物名字</span>
+        <input type="text" id="petName" maxlength="12" placeholder="给宠物起个名字" />
+      </label>
+      <label class="field">
+        <span>选择宠物</span>
+        <div class="pet-picker" id="petPicker"></div>
+      </label>
+      <label class="field">
+        <span>自定义宠物图片</span>
+        <div class="custom-pet-area">
+          <div class="custom-pet-preview" id="customPetPreview">
+            <span class="placeholder">📷 未上传</span>
+          </div>
+          <div class="custom-pet-btns">
+            <button type="button" class="btn" id="uploadPetImg">上传图片</button>
+            <button type="button" class="btn danger" id="clearPetImg">清除</button>
+          </div>
+          <input type="file" id="petImgInput" accept="image/*" hidden />
+        </div>
+      </label>
+      <label class="field">
+        <span>音效</span>
+        <label class="switch">
+          <input type="checkbox" id="soundToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </label>
+      <label class="field">
+        <span>自动随时间变困</span>
+        <label class="switch">
+          <input type="checkbox" id="decayToggle" checked />
+          <span class="slider"></span>
+        </label>
+      </label>
+      <div class="field">
+        <span>🤖 AI 对话设置</span>
+        <div class="ai-tabs">
+          <button type="button" class="ai-tab active" data-provider="openai">OpenAI 兼容</button>
+          <button type="button" class="ai-tab" data-provider="coze">扣子 Coze</button>
+        </div>
+        <!-- OpenAI 兼容配置（DeepSeek 等） -->
+        <div class="ai-config" id="openaiConfig">
+          <input type="text" id="aiApiUrl" placeholder="API 地址，如 https://api.deepseek.com" />
+          <input type="text" id="aiModel" placeholder="模型名，如 deepseek-chat" />
+          <input type="password" id="aiApiKey" placeholder="API Key（sk- 开头）" />
+          <div class="hint">已默认 DeepSeek，只需填 Key。也支持其他 OpenAI 兼容接口。</div>
+        </div>
+        <!-- 扣子 Coze 配置 -->
+        <div class="ai-config hidden" id="cozeConfig">
+          <input type="text" id="cozeApiUrl" placeholder="扣子 API 地址，默认 https://api.coze.cn" />
+          <input type="text" id="cozeBotId" placeholder="智能体 Bot ID（发布为 API 后获取）" />
+          <input type="password" id="cozeToken" placeholder="访问令牌 Access Token（pat_ 开头）" />
+          <div class="hint">在扣子平台把智能体「发布 → API」获取 Bot ID，并在「API 管理」生成令牌。人设请在智能体的「人设与回复逻辑」中配置。</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" id="saveSettings">保存</button>
+        <button class="btn" id="closeSettings">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 帮助面板 -->
+  <div class="modal hidden" id="helpModal">
+    <div class="modal-card">
+      <h2>玩法说明</h2>
+      <ul class="help-list">
+        <li>🖱️ <b>拖拽</b>宠物可以在屏幕上到处移动。</li>
+        <li>👆 <b>左键点击</b>宠物可以抚摸它。</li>
+        <li>🖱️ <b>右键点击</b>宠物弹出菜单（喂食/玩耍/睡觉/设置等）。</li>
+        <li>🍖 喂食可以恢复饱食度。</li>
+        <li>🎾 玩耍可以提升心情，但会消耗精力。</li>
+        <li>💤 让它睡觉可以恢复精力。</li>
+        <li>💬 右键聊天可进行 AI 对话，支持 DeepSeek 等 OpenAI 接口和扣子智能体（在设置中配置）。</li>
+        <li>⚙️ 在设置里可以切换不同的宠物和名字。</li>
+      </ul>
+      <div class="modal-actions">
+        <button class="btn primary" id="closeHelp">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 任务提醒面板 -->
+  <div class="modal hidden" id="tasksModal">
+    <div class="modal-card">
+      <h2>📋 任务提醒</h2>
+      <div class="task-form">
+        <input type="text" id="taskTitle" placeholder="任务内容，如：下午3点开会" maxlength="40" />
+        <input type="datetime-local" id="taskTime" />
+        <button class="btn primary" id="addTaskBtn">添加</button>
+      </div>
+      <div class="task-list" id="taskList"></div>
+      <div class="modal-actions">
+        <button class="btn" id="closeTasks">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 番茄钟面板 -->
+  <div class="modal hidden" id="pomodoroModal">
+    <div class="modal-card">
+      <h2>🍅 番茄钟</h2>
+      <div class="pomo-display">
+        <div class="pomo-timer" id="pomoTimer">25:00</div>
+        <div class="pomo-mode" id="pomoMode">专注时间</div>
+      </div>
+      <div class="pomo-settings">
+        <label class="field inline">
+          <span>专注(分)</span>
+          <input type="number" id="pomoFocus" value="25" min="1" max="120" />
+        </label>
+        <label class="field inline">
+          <span>休息(分)</span>
+          <input type="number" id="pomoBreak" value="5" min="1" max="60" />
+        </label>
+      </div>
+      <div class="pomo-actions">
+        <button class="btn primary" id="pomoStart">开始</button>
+        <button class="btn" id="pomoPause">暂停</button>
+        <button class="btn" id="pomoReset">重置</button>
+      </div>
+      <div class="pomo-info">已完成 <b id="pomoCount">0</b> 个番茄</div>
+      <div class="modal-actions">
+        <button class="btn" id="closePomo">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 对话面板 -->
+  <div class="modal hidden" id="chatModal">
+    <div class="modal-card chat-card">
+      <h2>💬 聊天</h2>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="说点什么..." maxlength="200" />
+        <button class="btn primary" id="chatSend">发送</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="closeChat">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
