@@ -272,6 +272,11 @@ const PHRASES = {
 /* -------------------- 状态管理 -------------------- */
 const STORAGE_KEY = "cloud-pet-settings";
 
+// 内置 Coze 配置（随安装包下发，开箱即用；用户仍可在设置面板手动覆盖）
+const DEFAULT_COZE_API_URL = "https://api.coze.cn";
+const DEFAULT_COZE_BOT_ID  = "7690842452521222153";
+const DEFAULT_COZE_TOKEN   = "pat_aKvIBRJqWj3JqBMZMnQ7ggLK03kc9atYSL45KVFMsr7tkRa2FiJSnAJdWoeEaLPr";
+
 const state = {
   petType: "cat",
   petName: "小橘",
@@ -284,13 +289,13 @@ const state = {
   customPetImg: null,   // 自定义宠物图片（base64）
   tasks: [],            // 任务列表
   pomodoroCount: 0,     // 已完成番茄数
-  aiProvider: "openai",  // AI 平台：openai | coze
+  aiProvider: "coze",   // AI 平台：openai | coze（内置 Coze 配置，默认走扣子）
   aiApiUrl: "https://api.deepseek.com",  // 大模型 API 地址（默认 DeepSeek）
   aiModel: "deepseek-chat",              // 模型名（DeepSeek 对话模型）
   aiApiKey: "",                          // API Key（需自行填入）
-  cozeApiUrl: "https://api.coze.cn",     // 扣子 API 地址（国内版）
-  cozeBotId: "",                         // 扣子智能体 Bot ID
-  cozeToken: ""                          // 扣子访问令牌 pat_
+  cozeApiUrl: DEFAULT_COZE_API_URL,      // 扣子 API 地址（国内版）
+  cozeBotId: DEFAULT_COZE_BOT_ID,        // 扣子智能体 Bot ID
+  cozeToken: DEFAULT_COZE_TOKEN          // 扣子访问令牌 pat_
 };
 
 function loadState() {
@@ -298,11 +303,14 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved) {
       Object.assign(state, saved);
-      // 兼容旧版空配置：补全 DeepSeek 默认地址和模型
+      // 兼容旧版空配置：补全默认地址/模型
       if (!state.aiApiUrl) state.aiApiUrl = "https://api.deepseek.com";
       if (!state.aiModel) state.aiModel = "deepseek-chat";
       if (!state.aiProvider) state.aiProvider = "openai";
-      if (!state.cozeApiUrl) state.cozeApiUrl = "https://api.coze.cn";
+      // Coze 配置为空时回填内置默认值（保证老用户升级后也能开箱即用）
+      if (!state.cozeApiUrl) state.cozeApiUrl = DEFAULT_COZE_API_URL;
+      if (!state.cozeBotId)  state.cozeBotId  = DEFAULT_COZE_BOT_ID;
+      if (!state.cozeToken)  state.cozeToken  = DEFAULT_COZE_TOKEN;
       // 已配置扣子智能体（Bot ID + Token）时，默认使用 Coze 聊天
       if (state.cozeBotId && state.cozeToken) state.aiProvider = "coze";
     }

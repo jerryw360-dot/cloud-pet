@@ -285,9 +285,44 @@ ipcMain.handle("coze-chat", async (event, { apiUrl, token, botId, query, convers
   const convId = createResp.data.conversation_id;
 
   // 2. 轮询对话状态（每秒一次，最多 60 秒）
+  //    status 可能取值：
+  //      in_progress     进行中，继续轮询
+  //      completed       已完成，可以取消息
+  //      failed          失败
+  //      canceled       已取消
+  //      requires_action 需要客户端提交工具输出（如调用了客户端 function）后继续
   let status = createResp.data.status;
-  for (let i = 0; i < 60 && status !== "completed" && status !== "failed" && status !== "canceled" && status !== "requires_action"; i++) {
-    await sleep(1000);
+  let requiredAction = createResp.data.required_action || null;
+  for (let i = 0; i < 60
+        && status !== "completed"
+        && status !== "failed"
+        && status !== "canceled"; i++) {
+    if (status === "requires_action") {
+      // Coze v3：required_action.type=submit_tool_outputs 时，字段在
+      // required_action.submit_tool_outputs.tool_calls[]，每项含 tool_call_id。
+      // 注意：
+      //   1) 国内扣子站 coze.cn 没有 /v3/chat/submit/tool_outputs 端点（404），海外站才有；
+      //   2) “对话流”模式结束后，Bot 会卡在 requires_action 状态但 completed_at 已设置，
+      //      此时直接去取消息列表即可拿到最终答案——不需要也不应该尝试调用不存在的 submit。
+      const toolCalls = requiredAction?.submit_tool_outputs?.tool_calls || [];
+      if (toolCalls.length === 0) {
+        // 无工具调用：对话已实质完成（completed_at 已设置），直接跳出循环取消息
+        status = "completed";
+        break;
+      }
+      // 有工具调用：尝试提交默认输出（仅 coze.com 海外站会成功，coze.cn 会 404 但不影响后续取消息）
+      const toolResponse = toolCalls.map(tc => ({
+        tool_call_id: tc.tool_call_id,
+        output: "{}"
+      }));
+      const submitUrl = `${base}/v3/chat/submit/tool_outputs?conversation_id=${encodeURIComponent(convId)}&chat_id=${encodeURIComponent(chatId)}`;
+      const submitBody = { data: { tool_response: toolResponse, bot_id: botId } };
+      const submitResp = await httpJson("POST", submitUrl, auth, submitBody);
+      requiredAction = null; // 已处理
+      await sleep(500);
+    } else {
+      await sleep(1000);
+    }
     const r = await httpJson("GET",
       `${base}/v3/chat/retrieve?conversation_id=${encodeURIComponent(convId)}&chat_id=${encodeURIComponent(chatId)}`,
       auth, null);
@@ -295,12 +330,13 @@ ipcMain.handle("coze-chat", async (event, { apiUrl, token, botId, query, convers
       throw new Error(r.msg || "查询扣子对话状态失败");
     }
     status = r.data.status;
+    requiredAction = r.data.required_action || null;
     if (status === "failed") {
       throw new Error(r.data.last_error?.msg || "扣子对话处理失败");
     }
   }
   if (status !== "completed") {
-    throw new Error("扣子对话超时或未完成（status=" + status + "）");
+    throw new Error("扣子对话超时或未完成（status=" + status + "）。required_action=" + JSON.stringify(requiredAction));
   }
 
   // 3. 取消息列表，拼接 type=answer 的助手回复
